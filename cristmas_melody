@@ -1,0 +1,77 @@
+// Christmas project: 3 LEDs + button + speaker with Christmas melody
+// LEDs on 3, 4, 5; button on 2; speaker on 8
+
+const int LED1_PIN    = 3;
+const int LED2_PIN    = 4;
+const int LED3_PIN    = 5;
+const int BUTTON_PIN  = 2;
+const int SPEAKER_PIN = 8;
+
+int lastButtonState = HIGH;   // because we use INPUT_PULLUP
+bool isPlaying      = false;
+
+int melody[] = {
+  330, 330, 392, 440, 494, 523,   // Silent night, holy night
+  523, 494, 440, 392,             // All is calm, all is bright
+  392, 440, 494, 523, 587         // Round yon virgin mother and child
+};
+
+int noteDur[] = {
+  300, 300, 400, 400, 400, 800,   // Silent night, holy night--
+  300, 300, 400, 800,             // All is calm, all is bright--
+  300, 300, 400, 400, 1000        // Round yon virgin... child--
+};
+void setup() {
+  pinMode(LED1_PIN, OUTPUT);
+  pinMode(LED2_PIN, OUTPUT);
+  pinMode(LED3_PIN, OUTPUT);
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);   // button between pin 2 and GND
+}
+
+void loop() {
+  int buttonState = digitalRead(BUTTON_PIN);
+
+  // Start melody on new button press (HIGH -> LOW)
+  if (buttonState == LOW && lastButtonState == HIGH && !isPlaying) {
+    isPlaying = true;
+    playChristmasMelody();
+    isPlaying = false;
+  }
+
+  lastButtonState = buttonState;
+}
+
+void playChristmasMelody() {
+  int notes = sizeof(melody) / sizeof(melody[0]);
+  int repeats = 3;  // <-- CHANGE THIS NUMBER for more/less repeats (3 = ~12 seconds)
+
+  for (int r = 0; r < repeats; r++) {    // Repeat the whole melody this many times
+    for (int i = 0; i < notes; i++) {
+      // Cycle LEDs through the 3 LEDs
+      if (i % 3 == 0) {
+        setLeds(HIGH, LOW, LOW);
+      } else if (i % 3 == 1) {
+        setLeds(LOW, HIGH, LOW);
+      } else {
+        setLeds(LOW, LOW, HIGH);
+      }
+
+      tone(SPEAKER_PIN, melody[i]);
+      delay(noteDur[i]);
+
+      setLeds(LOW, LOW, LOW);
+      noTone(SPEAKER_PIN);
+      delay(80);
+    }
+  }
+
+  setLeds(LOW, LOW, LOW);
+  noTone(SPEAKER_PIN);
+}
+
+void setLeds(int s1, int s2, int s3) {
+  digitalWrite(LED1_PIN, s1);
+  digitalWrite(LED2_PIN, s2);
+  digitalWrite(LED3_PIN, s3);
+}
